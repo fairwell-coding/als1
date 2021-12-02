@@ -15,8 +15,8 @@ num_observations = env.observation_space.n
 Q = np.zeros((num_observations, num_actions))
 
 alpha = 3e-1
-eps = 1
-gamma = 2
+eps = 1.0
+gamma = 0.9
 alpha_decay = 0.999
 eps_decay = 0.999
 max_train_iterations = 1000
@@ -35,7 +35,7 @@ def policy(state, is_training):
 
 
 def train_step(state, action, reward, next_state, next_action, done):
-    """ training using on-policy SARSA algorithm
+    """ training using off-policy Q-learning algorithm
     """
 
     global alpha
@@ -43,7 +43,7 @@ def train_step(state, action, reward, next_state, next_action, done):
     if done:  # terminal state reached
         Q[next_state, next_action] = 0
 
-    Q[state, action] = Q[state, action] + alpha * (reward + gamma * Q[next_state, next_action] - Q[state, action])
+    Q[state, action] = Q[state, action] + alpha * (reward + gamma * np.argmax(Q[next_state, :]) - Q[state, action])
 
 
 def modify_reward(reward):
