@@ -5,7 +5,7 @@ from frozenlake_utils import plot_results
 from utils import env_step, env_reset
 
 seed = 42
-env = FrozenLakeEnv(is_slippery=False)
+env = FrozenLakeEnv(is_slippery=True)
 env.seed(seed)
 np.random.seed(seed)
 
@@ -16,7 +16,7 @@ Q = np.zeros((num_observations, num_actions))
 
 alpha = 3e-1
 eps = 1
-gamma = 0.9  # 0; 0:2; 0:7; 1
+gamma = 0.9
 alpha_decay = 0.999
 eps_decay = 0.999
 max_train_iterations = 1000
@@ -44,7 +44,6 @@ def train_step(state, action, reward, next_state, next_action, done):
         Q[next_state, next_action] = 0
 
     Q[state, action] = Q[state, action] + alpha * (reward + gamma * Q[next_state, next_action] - Q[state, action])
-    Q[state, action] = Q[state, action] + alpha * (Q[state, action] - )
 
 
 def modify_reward(reward):
@@ -67,6 +66,7 @@ def run_episode(is_training):
         state, action = next_state, next_action
         if done:
             break
+    print('----------------------------------------------------')
     return episode_reward
 
 
