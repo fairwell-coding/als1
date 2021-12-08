@@ -1,10 +1,8 @@
 import gym
 import numpy as np
-from gym.envs.toy_text import FrozenLakeEnv
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
+from torch.autograd import Variable
 from torch.nn import MSELoss
 from torch.optim import Adam
 
@@ -50,7 +48,7 @@ def policy(state, is_training):
         if is_training and np.random.uniform(0, 1) < eps:  # choose actions deterministically during test phase
             return torch.tensor(np.random.choice(num_actions))  # return a random action with probability epsilon
         else:
-            return model(torch.tensor(state))  # otherwise return the action approximated by linear model
+            return np.argmax(model(torch.tensor(state)))  # otherwise return the action approximated by linear model
 
 
 criterion = MSELoss()  # using MSE instead of least squared error only differs in a scaling factor of 1/2 instead of 1/N for N samples which only affects convergence rate but not the global
@@ -59,24 +57,6 @@ optimizer = Adam(model.parameters(), lr=alpha)
 
 
 def compute_loss(state, action, reward, next_state, next_action, done):
-    # Q[:, action] = Q[:, action] + alpha * (reward + gamma * Q[:, next_action] - Q[:, action]) * state
-    #
-    # if not done:
-    #     Q[:, next_action] = Q[:, next_action] + alpha * gamma * (Q[:, action] - (reward + gamma * Q[:, next_action])) * next_state
-    # else:
-    #     Q[:, next_action] = torch.empty((num_observations, 1, 1))
-    #
-    # loss = criterion(Q[:, action], reward + gamma * Q[:, next_action])
-    #
-    # state = convert(state)
-    # next_state = convert(next_state)
-    # action = action.view(1, 1)
-    # next_action = next_action.view(1, 1)
-    # reward = torch.tensor(reward).view(1, 1)
-    # done = torch.tensor(done).int().view(1, 1)
-    #
-    # return loss
-
     state = convert(state)
     next_state = convert(next_state)
     action = action.view(1, 1)
@@ -84,16 +64,14 @@ def compute_loss(state, action, reward, next_state, next_action, done):
     reward = torch.tensor(reward).view(1, 1)
     done = torch.tensor(done).int().view(1, 1)
 
-    Q[:, action] = Q[:, action] + alpha * (reward + gamma * Q[:, next_action] - Q[:, action]) * state
+    Q[:, action] = Q[:, action] + alpha * (reward + gamma * Q[:, next_action] - Q[:, action]) * state.reshape((-1, 1, 1))
 
     if not done:
-        Q[:, next_action] = Q[:, next_action] + alpha * gamma * (Q[:, action] - (reward + gamma * Q[:, next_action])) * next_state
+        Q[:, next_action] = Q[:, next_action] + alpha * gamma * (Q[:, action] - (reward + gamma * Q[:, next_action])) * next_state.reshape((-1, 1, 1))
     else:
         Q[:, next_action] = torch.empty((num_observations, 1, 1))
 
-    loss = criterion(Q[:, action], reward + gamma * Q[:, next_action])
-
-    return loss
+    return Variable(criterion(Q[:, action], reward + gamma * Q[:, next_action]), requires_grad=True)
 
 
 def train_step(state, action, reward, next_state, next_action, done):
