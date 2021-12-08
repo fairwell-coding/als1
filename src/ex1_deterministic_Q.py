@@ -80,4 +80,5 @@ for it in range(max_train_iterations):
 test_reward = []
 for it in range(max_test_iterations):
     test_reward.append(run_episode(is_training=False))
+print('avg accumulated reward =', sum(test_reward)/max_test_iterations)
 plot_results(train_reward, test_reward, Q, env)

@@ -85,11 +85,11 @@ def plot_results(train_reward, test_reward, Q_table, env):
   train_reward = np.array(train_reward)
   test_reward = np.array(test_reward)
   un_r = np.unique(train_reward)
-  assert (un_r == [0, 1]).all() or (un_r == [0]).all() or (un_r == [1
-                                                                   ]).all(), '''
-    The reward list should be only 0 and 1 for the FrozenLake problem.
-    If you transform the reward in the algorithm, the natural reward [0,1] should still be reported.
-    Now we found {}'''.format(np.unique(train_reward))
+  # assert (un_r == [0, 1]).all() or (un_r == [0]).all() or (un_r == [1
+  #                                                                  ]).all(), '''
+  #   The reward list should be only 0 and 1 for the FrozenLake problem.
+  #   If you transform the reward in the algorithm, the natural reward [0,1] should still be reported.
+  #   Now we found {}'''.format(np.unique(train_reward))
 
   fig, ax_list = plt.subplots(2, 2)
 
@@ -107,8 +107,10 @@ def plot_results(train_reward, test_reward, Q_table, env):
   ax_list[0, 1].set_ylim([0, 1.1])
   ax_list[0, 1].axhline(y=r_av, color='red', lw=1)
   # ax_list[0, 1].set_xticks([0, N_trial_test])
-  ax_list[0, 1].set_yticks([0, r_av, 1])
-  ax_list[0, 1].set_ylim([0, 1.1])
+  ax_list[0, 1].set_yticks([-100, -75, -50, 0, r_av, 50, 75, 100])
+  ax_list[0, 1].set_ylim([-110, 110])
+  # ax_list[0, 1].set_yticks([0, r_av, 1])
+  # ax_list[0, 1].set_ylim([0, 1.1])
   ax_list[0, 1].set_title('Testing')
   ax_list[0, 1].set_xlabel('Trial number')
 

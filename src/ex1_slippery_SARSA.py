@@ -15,11 +15,11 @@ num_observations = env.observation_space.n
 Q = np.zeros((num_observations, num_actions))
 
 alpha = 3e-1
-eps = 1
-gamma = 0.9
+eps = 0.01
+gamma = 1
 alpha_decay = 0.999
 eps_decay = 0.999
-max_train_iterations = 1000
+max_train_iterations = 10000
 max_test_iterations = 100
 max_episode_length = 200
 
@@ -46,9 +46,14 @@ def train_step(state, action, reward, next_state, next_action, done):
     Q[state, action] = Q[state, action] + alpha * (reward + gamma * Q[next_state, next_action] - Q[state, action])
 
 
-def modify_reward(reward):
-    # TODO: In some tasks, we will have to modify the reward.
-    return reward
+def modify_reward(reward, done):
+    if reward == 1 and done:
+        return 100
+
+    if reward == 0 and done:
+        return -100
+
+    return -1
 
 
 def run_episode(is_training):
@@ -58,7 +63,7 @@ def run_episode(is_training):
     action = policy(state, is_training)
     for t in range(max_episode_length):
         next_state, reward, done, _ = env_step(env, action, not is_training)
-        reward = modify_reward(reward)
+        reward = modify_reward(reward, done)
         episode_reward += reward
         next_action = policy(next_state, is_training)
         if is_training:
@@ -66,7 +71,6 @@ def run_episode(is_training):
         state, action = next_state, next_action
         if done:
             break
-    print('----------------------------------------------------')
     return episode_reward
 
 
@@ -81,4 +85,5 @@ for it in range(max_train_iterations):
 test_reward = []
 for it in range(max_test_iterations):
     test_reward.append(run_episode(is_training=False))
+print('avg accumulated reward =', sum(test_reward)/max_test_iterations)
 plot_results(train_reward, test_reward, Q, env)

@@ -2,3 +2,6 @@ python=3.9
 numpy=1.21
 gym=0.21
 matplotlib=3.4
+conda install pytorch torchvision torchaudio cpuonly -c pytorch
+
+
