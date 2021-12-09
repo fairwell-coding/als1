@@ -66,25 +66,16 @@ def compute_loss(state, action, reward, next_state, next_action, done):
     reward = torch.tensor(reward).view(1, 1)
     done = torch.tensor(done).int().view(1, 1)
 
-    max_q_tensor = __get_q_tensor_for_max_action()
-    Q[:, action] = Q[:, action] + alpha * (reward + gamma * max_q_tensor - Q[:, action]) * state.reshape((-1, 1, 1))
+    q = model(state)[0][action]
+    with torch.no_grad():
+        next_q = model(next_state)[0][np.argmax(model(next_state)[0])]
+        if done:
+            next_q = torch.zeros_like(next_q)
 
-    if not done:
-        Q[:, next_action] = Q[:, next_action] + alpha * gamma * (Q[:, action] - (reward + gamma * Q[:, next_action])) * next_state.reshape((-1, 1, 1))
-    else:
-        Q[:, next_action] = torch.empty((num_observations, 1, 1))
+    output = q
+    target = reward + gamma * next_q
 
-    loss = Variable(criterion(Q[:, action], reward + gamma * Q[:, next_action]), requires_grad=True)
-    Q[:, next_action].detach()
-
-    return loss
-
-
-def __get_q_tensor_for_max_action():
-    max_q_tensor = torch.zeros([num_observations, 1, 1])
-    for i in range(num_observations):
-        max_q_tensor[i] = np.argmax(Q[i, :])
-    return max_q_tensor
+    return criterion(output, target)
 
 
 def train_step(state, action, reward, next_state, next_action, done):
