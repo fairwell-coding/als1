@@ -55,6 +55,9 @@ criterion = MSELoss()  # using MSE instead of least squared error only differs i
 # minimization
 optimizer = Adam(model.parameters(), lr=alpha)
 
+def dummy(x):
+    return x
+
 
 def compute_loss(state, action, reward, next_state, next_action, done):
     state = convert(state)
@@ -64,17 +67,29 @@ def compute_loss(state, action, reward, next_state, next_action, done):
     reward = torch.tensor(reward).view(1, 1)
     done = torch.tensor(done).int().view(1, 1)
 
-    Q[:, action] = Q[:, action] + alpha * (reward + gamma * Q[:, next_action] - Q[:, action]) * state.reshape((-1, 1, 1))
+    max_q_tensor = __get_q_tensor_for_max_action()
+    Q[:, action] = Q[:, action] + alpha * (reward + gamma * max_q_tensor - Q[:, action]) * state.reshape((-1, 1, 1))
 
     if not done:
         Q[:, next_action] = Q[:, next_action] + alpha * gamma * (Q[:, action] - (reward + gamma * Q[:, next_action])) * next_state.reshape((-1, 1, 1))
     else:
         Q[:, next_action] = torch.empty((num_observations, 1, 1))
 
+    max_q_tensor = torch.zeros([num_observations, 1, 1])
+    for i in range(Q[:, :].shape[0]):
+        np.argmax(Q[i, :])
+
     loss = Variable(criterion(Q[:, action], reward + gamma * Q[:, next_action]), requires_grad=True)
     Q[:, next_action].detach()
 
     return loss
+
+
+def __get_q_tensor_for_max_action():
+    max_q_tensor = torch.zeros([num_observations, 1, 1])
+    for i in range(num_observations):
+        max_q_tensor[i] = np.argmax(Q[i, :])
+    return max_q_tensor
 
 
 def train_step(state, action, reward, next_state, next_action, done):

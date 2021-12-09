@@ -34,7 +34,9 @@ def convert(x):
 
 
 model = nn.Sequential(
-    nn.Linear(in_features=num_observations, out_features=num_actions)
+    nn.Linear(in_features=num_observations, out_features=num_hidden),
+    nn.ReLU(),
+    nn.Linear(in_features=num_hidden, out_features=num_actions)
 )
 
 
