@@ -2,6 +2,7 @@ import gym
 import numpy as np
 import torch
 import torch.nn as nn
+from torch.autograd import Variable
 from torch.nn import MSELoss
 from torch.optim import Adam
 
@@ -9,7 +10,7 @@ from cartpole_utils import plot_results
 from utils import env_reset, env_step
 
 seed = 42
-env = gym.make("CartPole-v0")
+env = gym.make("Acrobot-v1")
 env.seed(seed)
 torch.manual_seed(seed)
 
@@ -32,7 +33,9 @@ def convert(x):
 
 
 model = nn.Sequential(
-    nn.Linear(in_features=num_observations, out_features=num_actions)
+    nn.Linear(in_features=num_observations, out_features=num_hidden),
+    nn.ReLU(),
+    nn.Linear(in_features=num_hidden, out_features=num_actions)
 )
 
 
@@ -64,7 +67,7 @@ def compute_loss(state, action, reward, next_state, next_action, done):
 
     q = model(state)[0][action]
     with torch.no_grad():
-        next_q = model(next_state)[0][next_action]
+        next_q = model(next_state)[0][np.argmax(model(next_state)[0])]
         if done:
             next_q = torch.zeros_like(next_q)
 

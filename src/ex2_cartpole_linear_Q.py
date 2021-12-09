@@ -16,7 +16,6 @@ torch.manual_seed(seed)
 
 num_actions = env.action_space.n
 num_observations = env.observation_space.shape[0]
-Q = torch.zeros([num_observations, num_actions])
 
 # Parameters
 num_hidden = 20
